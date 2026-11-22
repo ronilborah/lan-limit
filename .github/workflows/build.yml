@@ -7,9 +7,15 @@ permissions:
   contents: read
 jobs:
   build:
-    runs-on: macos-14
+    runs-on: macos-15
     steps:
       - uses: actions/checkout@v4
+      - name: Verify the app shipped in the clone
+        run: |
+          executable="Campus Quota.app/Contents/MacOS/CampusQuota"
+          lipo -verify_arch x86_64 arm64 "$executable"
+          codesign --verify --deep --strict "Campus Quota.app"
+          "$executable" --self-test
       - name: Build, test, and sign locally
         env:
           CAMPUSQUOTA_ARCHS: arm64 x86_64

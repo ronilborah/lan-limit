@@ -1,0 +1,44 @@
+name: Build Windows app
+on:
+  push:
+    paths: ['Campus Quota.exe', 'Windows/**', 'build-windows.ps1', '.github/workflows/build-windows.yml']
+  pull_request:
+    paths: ['Campus Quota.exe', 'Windows/**', 'build-windows.ps1', '.github/workflows/build-windows.yml']
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  build:
+    runs-on: ${{ matrix.runner }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - { runtime: win-x64, runner: windows-latest }
+          - { runtime: win-arm64, runner: windows-11-arm }
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '10.0.x'
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Check and publish self-contained app
+        shell: pwsh
+        run: ./build-windows.ps1 -Runtime '${{ matrix.runtime }}'
+      - name: Windows native checks
+        shell: pwsh
+        run: |
+          foreach ($exe in @('.\Campus Quota.exe', 'dist/CampusQuota-${{ matrix.runtime }}/CampusQuota.exe')) {
+            $process = Start-Process -FilePath $exe -ArgumentList '--self-test' -Wait -PassThru
+            if ($process.ExitCode -ne 0) {
+              if (Test-Path windows-check-failure.txt) { Get-Content windows-check-failure.txt }
+              throw "$exe failed native checks with exit code $($process.ExitCode)"
+            }
+          }
+      - uses: actions/upload-artifact@v4
+        with:
+          name: CampusQuota-${{ matrix.runtime }}
+          path: dist/CampusQuota-${{ matrix.runtime }}/
+          if-no-files-found: error

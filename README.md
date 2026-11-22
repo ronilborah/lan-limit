@@ -1,8 +1,21 @@
 # Campus Quota
 
-A native macOS menu bar app showing the campus portal's daily **GB left**, with saved accounts and five-minute updates. macOS 14 or later; no third-party runtime dependencies.
+Campus Quota shows how much campus data you have left in the macOS menu bar or Windows system tray. It supports saved accounts and refreshes every five minutes.
 
-## Get started
+## Run after cloning
+
+Connect to the campus LAN, open the cloned folder in Finder or File Explorer, and double-click the file for your computer.
+
+| Computer | Double-click in the repository root |
+| --- | --- |
+| Mac running macOS 14 or later, Apple silicon or Intel | **Campus Quota.app** |
+| Windows 10 or 11 | **Campus Quota.exe** |
+
+Both apps are included in the clone. The Windows executable bundles .NET and uses Microsoft Edge WebView2. If the portal window reports that WebView2 is missing, install the [Microsoft Evergreen Runtime](https://developer.microsoft.com/microsoft-edge/webview2/) and reopen the app. The Mac app is ad hoc signed and the Windows app is unsigned, so the operating system may prompt on first launch.
+
+For Windows account setup, tray controls and diagnostics, see the [Windows guide](Windows/README.md).
+
+## Using the Mac app
 
 1. Open **Campus Quota.app** on campus LAN. Keep one installed copy and quit older versions before replacing them.
 2. If prompted about an untrusted portal certificate, verify its SHA-256 fingerprint with campus IT before approving. Approval is restricted to that exact certificate at this portal inside the app.
@@ -56,16 +69,22 @@ Checks cover daily versus lifetime usage, the real portal's headers and nested l
 
 See [TESTING.md](TESTING.md) for native smoke tests.
 
-## GitHub
+## Updating the launchers
 
-This is a local Git repository with source, build instructions and a GitHub Actions workflow. Outputs, caches, credentials and local preferences are excluded. After creating an empty GitHub repository:
+When publishing a change to the Mac app, build both architectures using the universal build command above, then copy the verified bundle into the repository root.
 
 ```sh
-git remote add origin https://github.com/YOUR_USERNAME/YOUR_REPOSITORY.git
-git push -u origin main
+ditto "dist/Campus Quota.app" "Campus Quota.app"
 ```
 
-The workflow builds a universal app, runs checks and uploads a ZIP artifact. Public distribution signing and notarization require your own Apple Developer credentials and are not configured.
+For Windows, run the following in PowerShell with the .NET 10 SDK and Node.js installed. The root executable targets x86 so Windows can run the same file on Intel, AMD and ARM PCs. The build script also supports native x64 and ARM64 packages.
+
+```powershell
+./build-windows.ps1 -Runtime win-x86
+Copy-Item 'dist/CampusQuota-win-x86/CampusQuota.exe' 'Campus Quota.exe' -Force
+```
+
+Commit the updated launcher alongside its source. GitHub Actions tests the checked-in launchers as well as the source builds.
 
 ## Diagnostics and source
 

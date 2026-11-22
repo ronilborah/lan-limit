@@ -9,3 +9,5 @@ releases/
 *.mobileprovision
 *.keychain-db
 health.json
+**/bin/
+**/obj/
