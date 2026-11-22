@@ -13,7 +13,7 @@ jobs:
       - name: Verify the app shipped in the clone
         run: |
           executable="Campus Quota.app/Contents/MacOS/CampusQuota"
-          lipo -verify_arch x86_64 arm64 "$executable"
+          lipo "$executable" -verify_arch x86_64 arm64
           codesign --verify --deep --strict "Campus Quota.app"
           "$executable" --self-test
       - name: Build, test, and sign locally

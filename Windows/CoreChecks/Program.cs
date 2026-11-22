@@ -3,7 +3,7 @@ using System.Text.Json;
 
 int count = 0;
 void Check(bool condition, string name) { if (!condition) throw new Exception("FAIL: " + name); count++; }
-var now = DateTimeOffset.Now;
+var now = new DateTimeOffset(new DateTime(2026, 1, 15, 12, 0, 0, DateTimeKind.Local));
 string[] headers = ["Resource", "Allotted", "Up to last session", "Current session", "Total", "Remaining"];
 string[] Row(string label = "Cycle total network traffic", string allotted = "10000 MB", string remaining = "2919.06\nMB") => [label, allotted, "0 MB", "7080.94 MB", "7080.94 MB", remaining];
 Quota? Parse(string[] row) => Portal.Parse([[headers, row]], now);
@@ -29,7 +29,7 @@ Check(JsonSerializer.Deserialize<Credentials>(JsonSerializer.Serialize(credentia
 Check(Portal.RefreshSeconds == 300 && !q!.IsStale(false, now.AddSeconds(300)), "five-minute fresh");
 Check(q!.IsStale(true, now), "network failure stale");
 Check(q.IsStale(false, now.AddSeconds(361)), "six-minute stale");
-var midnight = new DateTimeOffset(2026, 10, 22, 0, 0, 1, now.Offset);
+var midnight = new DateTimeOffset(now.LocalDateTime.Date.AddSeconds(1));
 Check(new Quota(1, 2, midnight.AddSeconds(-2)).IsStale(false, midnight), "previous day stale");
 Check(Portal.Allowed(Portal.Url.AbsoluteUri) && !Portal.Allowed("http://172.16.0.30:65040/") && !Portal.Allowed("https://evil.example/"), "origin restriction");
 Check(Parse(Row(allotted: "0 MB", remaining: "0 MB")) == null, "reject invalid allocation");
